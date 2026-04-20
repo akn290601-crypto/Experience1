@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>呉服町 → 姪浜方面</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
+            background: #e8edf2;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 28px 16px;
+            color: #1a2a3a;
+        }
+
+        header { text-align: center; margin-bottom: 20px; }
+        header h1 { font-size: 1.3rem; font-weight: 700; }
+        header p  { font-size: 0.85rem; color: #6b7a8d; margin-top: 4px; }
+
+        .clock {
+            font-size: 3.8rem;
+            font-weight: 200;
+            letter-spacing: 3px;
+            font-variant-numeric: tabular-nums;
+            margin-bottom: 10px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 28px;
+        }
+        .badge.weekday { background: #dbeafe; color: #1d4ed8; }
+        .badge.holiday { background: #fce7f3; color: #be185d; }
+
+        .btn {
+            background: #1a2a3a;
+            color: white;
+            border: none;
+            padding: 16px 52px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-bottom: 28px;
+            transition: transform 0.1s, opacity 0.1s;
+        }
+        .btn:active { transform: scale(0.96); opacity: 0.85; }
+
+        .trains { width: 100%; max-width: 420px; }
+
+        .card {
+            background: white;
+            border-radius: 14px;
+            padding: 16px 20px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .card.first { border-left: 5px solid #1a2a3a; }
+
+        .card-left { flex: 1; }
+        .card-label { font-size: 0.72rem; color: #9ca3af; margin-bottom: 2px; }
+        .card-time  { font-size: 2rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: 1px; }
+        .card-wait  { font-size: 0.82rem; color: #6b7a8d; margin-top: 3px; }
+
+        .dest {
+            font-size: 0.88rem;
+            font-weight: 700;
+            padding: 6px 13px;
+            border-radius: 20px;
+            white-space: nowrap;
+        }
+        .dest-meinohama { background: #dbeafe; color: #1d4ed8; }
+        .dest-nishijin  { background: #fef9c3; color: #92400e; }
+        .dest-nakasu    { background: #f3f4f6; color: #4b5563; }
+
+        .empty {
+            text-align: center;
+            color: #9ca3af;
+            padding: 40px 0;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>呉服町 → 姪浜方面</h1>
+    <p>福岡市地下鉄 箱崎線（令和8年4月1日改正）</p>
+</header>
+
+<div class="clock" id="clock">--:--</div>
+<div class="badge" id="badge"></div>
+
+<button class="btn" onclick="showNext()">次の電車を確認</button>
+
+<div class="trains" id="trains"></div>
+
+<script>
+// 行き先: "" = 中洲川端 / "西" = 西新 / "姪" = 姪浜
+const timetable = {
+    weekday: {
+         5: [{m:39,d:"姪"}],
+         6: [{m:2,d:"姪"},{m:12,d:"姪"},{m:24,d:""},{m:37,d:""},{m:46,d:"姪"},{m:59,d:"姪"}],
+         7: [{m:11,d:""},{m:20,d:""},{m:29,d:""},{m:37,d:"姪"},{m:43,d:"姪"},{m:52,d:""}],
+         8: [{m:6,d:""},{m:14,d:""},{m:19,d:""},{m:24,d:""},{m:36,d:""},{m:44,d:"姪"},{m:51,d:""}],
+         9: [{m:0,d:""},{m:7,d:""},{m:15,d:""},{m:21,d:""},{m:30,d:""},{m:36,d:"姪"},{m:42,d:"姪"},{m:52,d:""},{m:56,d:""}],
+        10: [{m:7,d:""},{m:13,d:""},{m:20,d:""},{m:28,d:""},{m:35,d:""},{m:43,d:""},{m:51,d:""},{m:58,d:""}],
+        11: [{m:5,d:""},{m:12,d:""},{m:19,d:""},{m:27,d:""},{m:34,d:"西"},{m:43,d:""},{m:50,d:""},{m:57,d:""}],
+        12: [{m:4,d:""},{m:13,d:""},{m:19,d:""},{m:27,d:""},{m:34,d:"西"},{m:42,d:"西"},{m:49,d:""},{m:57,d:""}],
+        13: [{m:4,d:""},{m:12,d:""},{m:19,d:""},{m:27,d:""},{m:34,d:"西"},{m:42,d:"西"},{m:49,d:""},{m:57,d:""}],
+        14: [{m:4,d:""},{m:11,d:""},{m:19,d:""},{m:26,d:""},{m:35,d:"西"},{m:42,d:"西"},{m:49,d:""},{m:57,d:""}],
+        15: [{m:4,d:""},{m:12,d:""},{m:19,d:""},{m:27,d:""},{m:34,d:""},{m:41,d:"西"},{m:49,d:""},{m:56,d:""}],
+        16: [{m:5,d:""},{m:12,d:""},{m:20,d:""},{m:27,d:""},{m:35,d:""},{m:42,d:"姪"},{m:49,d:"姪"},{m:59,d:"姪"}],
+        17: [{m:10,d:""},{m:15,d:""},{m:20,d:""},{m:28,d:""},{m:34,d:""},{m:44,d:""},{m:56,d:""}],
+        18: [{m:4,d:""},{m:9,d:""},{m:18,d:""},{m:29,d:""},{m:34,d:"西"},{m:42,d:"西"},{m:50,d:"姪"},{m:55,d:""}],
+        19: [{m:0,d:""},{m:9,d:"姪"},{m:18,d:""},{m:25,d:"姪"},{m:31,d:""},{m:39,d:"姪"},{m:49,d:""}],
+        20: [{m:0,d:""},{m:10,d:"姪"},{m:19,d:""},{m:30,d:"姪"},{m:38,d:""},{m:46,d:"姪"},{m:57,d:""}],
+        21: [{m:6,d:"姪"},{m:14,d:""},{m:22,d:"姪"},{m:36,d:""},{m:46,d:"姪"},{m:58,d:""}],
+        22: [{m:9,d:"姪"},{m:23,d:""},{m:36,d:"姪"},{m:46,d:"姪"},{m:56,d:""}],
+        23: [{m:8,d:""},{m:22,d:"姪"},{m:32,d:"姪"},{m:45,d:"姪"}],
+         0: [{m:4,d:"姪"},{m:28,d:""}],
+    },
+    holiday: {
+         5: [{m:39,d:"姪"}],
+         6: [{m:3,d:"姪"},{m:23,d:"姪"},{m:45,d:"姪"},{m:58,d:""}],
+         7: [{m:13,d:""},{m:25,d:""},{m:35,d:"姪"},{m:48,d:""},{m:58,d:"姪"}],
+         8: [{m:6,d:""},{m:15,d:"姪"},{m:25,d:""},{m:35,d:"姪"},{m:41,d:""},{m:50,d:"姪"},{m:58,d:"姪"}],
+         9: [{m:6,d:""},{m:12,d:"姪"},{m:22,d:""},{m:27,d:""},{m:34,d:"姪"},{m:43,d:""},{m:50,d:"姪"},{m:56,d:""}],
+        10: [{m:0,d:"姪"},{m:14,d:""},{m:22,d:""},{m:28,d:""},{m:35,d:"姪"},{m:42,d:""},{m:49,d:"西"},{m:57,d:""}],
+        11: [{m:4,d:""},{m:12,d:""},{m:21,d:""},{m:28,d:""},{m:36,d:""},{m:43,d:""},{m:50,d:""},{m:57,d:""}],
+        12: [{m:4,d:"西"},{m:12,d:""},{m:19,d:"西"},{m:27,d:""},{m:34,d:""},{m:42,d:""},{m:49,d:""},{m:57,d:""}],
+        13: [{m:4,d:"西"},{m:12,d:""},{m:19,d:"西"},{m:28,d:""},{m:34,d:""},{m:42,d:""},{m:49,d:""},{m:57,d:""}],
+        14: [{m:4,d:"西"},{m:12,d:""},{m:19,d:"西"},{m:27,d:""},{m:36,d:""},{m:42,d:""},{m:52,d:"姪"},{m:57,d:""}],
+        15: [{m:4,d:"西"},{m:12,d:""},{m:19,d:"西"},{m:27,d:""},{m:34,d:""},{m:42,d:""},{m:49,d:"姪"},{m:57,d:""}],
+        16: [{m:7,d:""},{m:14,d:""},{m:23,d:""},{m:29,d:""},{m:37,d:""},{m:43,d:""},{m:51,d:""},{m:57,d:""}],
+        17: [{m:5,d:"姪"},{m:13,d:""},{m:20,d:""},{m:28,d:""},{m:37,d:""},{m:48,d:""},{m:57,d:""}],
+        18: [{m:9,d:"姪"},{m:20,d:""},{m:30,d:""},{m:39,d:""},{m:47,d:""},{m:56,d:""}],
+        19: [{m:6,d:""},{m:17,d:""},{m:23,d:""},{m:34,d:""},{m:44,d:"姪"},{m:56,d:""}],
+        20: [{m:2,d:""},{m:11,d:""},{m:21,d:""},{m:33,d:""},{m:46,d:""},{m:59,d:""}],
+        21: [{m:11,d:""},{m:23,d:"姪"},{m:34,d:""},{m:46,d:""},{m:57,d:""}],
+        22: [{m:7,d:""},{m:16,d:""},{m:26,d:"姪"},{m:36,d:"姪"},{m:48,d:""}],
+        23: [{m:2,d:""},{m:21,d:""},{m:32,d:""},{m:44,d:""}],
+         0: [{m:2,d:"姪"},{m:28,d:""}], // 土曜のみ運行
+    }
+};
+
+function getDayType(date) {
+    const d = date.getDay();
+    return (d === 0 || d === 6) ? 'holiday' : 'weekday';
+}
+
+function pad(n) { return String(n).padStart(2, '0'); }
+
+function destInfo(d) {
+    if (d === '姪') return { label: '姪浜', cls: 'dest-meinohama' };
+    if (d === '西') return { label: '西新',  cls: 'dest-nishijin'  };
+    return                 { label: '中洲川端', cls: 'dest-nakasu' };
+}
+
+function updateClock() {
+    const now = new Date();
+    document.getElementById('clock').textContent =
+        pad(now.getHours()) + ':' + pad(now.getMinutes());
+    const type  = getDayType(now);
+    const badge = document.getElementById('badge');
+    badge.textContent = type === 'weekday' ? '平日ダイヤ' : '土曜・休日ダイヤ';
+    badge.className   = 'badge ' + (type === 'weekday' ? 'weekday' : 'holiday');
+}
+
+function showNext() {
+    const now  = new Date();
+    const h    = now.getHours();
+    const m    = now.getMinutes();
+    // 深夜0時台は「24時台」として扱う
+    const nowTotal = (h < 5 ? h + 24 : h) * 60 + m;
+
+    const type  = getDayType(now);
+    const table = timetable[type];
+
+    const upcoming = [];
+    for (let hr = 5; hr <= 24; hr++) {
+        const key    = hr === 24 ? 0 : hr;
+        const trains = table[key];
+        if (!trains) continue;
+        for (const t of trains) {
+            const total = hr * 60 + t.m;
+            if (total > nowTotal) {
+                upcoming.push({ hr: key, min: t.m, dest: t.d, diff: total - nowTotal });
+            }
+        }
+    }
+
+    const container = document.getElementById('trains');
+    if (upcoming.length === 0) {
+        container.innerHTML = '<div class="empty">本日の電車は終了しました</div>';
+        return;
+    }
+
+    container.innerHTML = upcoming.slice(0, 5).map((t, i) => {
+        const { label, cls } = destInfo(t.dest);
+        const wait = t.diff <= 1 ? 'まもなく発車' : `あと ${t.diff} 分`;
+        return `<div class="card ${i === 0 ? 'first' : ''}">
+            <div class="card-left">
+                ${i === 0 ? '<div class="card-label">次の電車</div>' : ''}
+                <div class="card-time">${pad(t.hr)}:${pad(t.min)}</div>
+                <div class="card-wait">${wait}</div>
+            </div>
+            <div class="dest ${cls}">${label}</div>
+        </div>`;
+    }).join('');
+}
+
+updateClock();
+setInterval(updateClock, 15000);
+</script>
+
+</body>
+</html>
