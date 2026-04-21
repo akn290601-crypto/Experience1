@@ -21,14 +21,6 @@
         header { text-align: center; margin-bottom: 20px; }
         header h1 { font-size: 1.3rem; font-weight: 700; }
         header p  { font-size: 0.85rem; color: #6b7a8d; margin-top: 4px; }
-        #back-link {
-            display: none;
-            font-size: 0.82rem;
-            color: var(--accent, #1d4ed8);
-            margin-top: 6px;
-            cursor: pointer;
-            text-decoration: underline;
-        }
 
         .clock {
             font-size: 3.8rem;
@@ -50,7 +42,7 @@
         .badge.holiday { background: #fce7f3; color: #be185d; }
 
         .btn {
-            background: var(--accent, #1a2a3a);
+            background: #1a2a3a;
             color: white;
             border: none;
             padding: 16px 52px;
@@ -59,11 +51,11 @@
             border-radius: 50px;
             cursor: pointer;
             margin-bottom: 28px;
-            transition: transform 0.1s, opacity 0.1s, background 0.3s;
+            transition: transform 0.1s, opacity 0.1s;
         }
         .btn:active { transform: scale(0.96); opacity: 0.85; }
         .btn-row { display: flex; gap: 10px; margin-bottom: 0; }
-        .btn-sub { background: var(--accent-sub, #4b5563); padding: 16px 20px; }
+        .btn-sub { background: #4b5563; padding: 16px 20px; }
 
         .trains { width: 100%; max-width: 420px; }
 
@@ -77,13 +69,14 @@
             align-items: center;
             gap: 16px;
         }
-        .card.first { border-left: 5px solid var(--accent, #1a2a3a); }
+        .card.first { border-left: 5px solid #1a2a3a; }
 
         .card-left { flex: 1; }
         .card-label { font-size: 0.72rem; color: #9ca3af; margin-bottom: 2px; }
         .card-times { display: flex; align-items: baseline; gap: 10px; }
         .card-time  { font-size: 2rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: 1px; }
         .card-arrival { font-size: 1rem; color: #6b7a8d; font-weight: 500; font-variant-numeric: tabular-nums; }
+        .card-conn  { font-size: 0.78rem; color: #9ca3af; margin-top: 2px; }
         .card-wait  { font-size: 0.82rem; color: #6b7a8d; margin-top: 3px; }
 
         .dest {
@@ -96,8 +89,6 @@
         .dest-meinohama { background: #dbeafe; color: #1d4ed8; }
         .dest-nishijin  { background: #fef9c3; color: #92400e; }
         .dest-nakasu    { background: #f3f4f6; color: #4b5563; }
-        .dest-nakasu.tappable { cursor: pointer; background: #e5e7eb; }
-        .dest-nakasu.tappable:active { opacity: 0.6; }
 
         .card.past { opacity: 0.45; }
 
@@ -112,9 +103,8 @@
 <body>
 
 <header>
-    <h1 id="h1-title">呉服町 → 姪浜方面</h1>
-    <p id="h1-sub">福岡市地下鉄 箱崎線（令和8年4月1日改正）</p>
-    <p id="back-link" onclick="switchToGofukumachi()">← 呉服町に戻る</p>
+    <h1>呉服町 → 姪浜方面</h1>
+    <p>福岡市地下鉄 箱崎線（令和8年4月1日改正）</p>
 </header>
 
 <div class="clock" id="clock">--:--</div>
@@ -173,11 +163,11 @@ const timetable = {
         21: [{m:11,d:"姪"},{m:23,d:"姪"},{m:34,d:"姪"},{m:46,d:""},{m:57,d:""}],
         22: [{m:7,d:"姪"},{m:16,d:""},{m:26,d:"姪"},{m:36,d:"姪"},{m:48,d:"姪"}],
         23: [{m:2,d:""},{m:21,d:"姪"},{m:32,d:"姪"},{m:44,d:"姪"}],
-         0: [{m:2,d:"姪"},{m:28,d:"姪"}], // 土曜のみ運行
+         0: [{m:2,d:"姪"},{m:28,d:"姪"}],
     }
 };
 
-// 中洲川端 → 姪浜方面（空港線）平日時刻表
+// 中洲川端 → 姪浜方面（空港線）
 const nakasuTimetable = {
     weekday: {
          5: [{m:34},{m:52}],
@@ -232,12 +222,36 @@ function getDayType(date) {
 
 function pad(n) { return String(n).padStart(2, '0'); }
 
-function arrivalTime(hr, min) {
-    const duration = (currentMode === 'nakasu') ? 15 : 17;
+function arrivalTime(hr, min, duration) {
     let ah = hr, am = min + duration;
     if (am >= 60) { ah++; am -= 60; }
     if (ah >= 24) ah -= 24;
     return pad(ah) + ':' + pad(am);
+}
+
+// 中洲川端着後の接続を検索。{ connHr, connMin, arrHr, arrMin } を返す
+function findConnection(deptHr, deptMin) {
+    const type  = getDayType(new Date());
+    const table = nakasuTimetable[type];
+    const adjH  = deptHr < 5 ? deptHr + 24 : deptHr;
+    const ref   = adjH * 60 + deptMin + 2; // 中洲川端着
+    for (let hr = 5; hr <= 24; hr++) {
+        const key    = hr === 24 ? 0 : hr;
+        const trains = table[key];
+        if (!trains) continue;
+        for (const t of trains) {
+            if (hr * 60 + t.m > ref) {
+                const finTotal = hr * 60 + t.m + 15;
+                return {
+                    connHr:  key,
+                    connMin: t.m,
+                    finHr:   Math.floor(finTotal / 60) % 24,
+                    finMin:  finTotal % 60,
+                };
+            }
+        }
+    }
+    return null;
 }
 
 function destInfo(d) {
@@ -256,25 +270,10 @@ function updateClock() {
     badge.className   = 'badge ' + (type === 'weekday' ? 'weekday' : 'holiday');
 }
 
-let trainOffset   = 0;
-let trainShown    = false;
-let currentMode   = 'gofukumachi'; // 'gofukumachi' | 'nakasu'
-let nakasuRefTotal = 0;
+let trainOffset = 0;
+let trainShown  = false;
 
 function getAllTrains() {
-    if (currentMode === 'nakasu') {
-        const type  = getDayType(new Date());
-        const table = nakasuTimetable[type];
-        const all   = [];
-        for (let hr = 5; hr <= 24; hr++) {
-            const key    = hr === 24 ? 0 : hr;
-            const trains = table[key];
-            if (!trains) continue;
-            for (const t of trains)
-                all.push({ hr: key, min: t.m, dest: '姪', diff: hr * 60 + t.m - nakasuRefTotal });
-        }
-        return all;
-    }
     const now      = new Date();
     const h        = now.getHours();
     const m        = now.getMinutes();
@@ -307,58 +306,38 @@ function renderAt(offset) {
         const isPast      = t.diff <= 0;
         const isNextTrain = trainOffset + i === nextIdx;
         const wait        = isPast ? '発車済' : (t.diff <= 1 ? 'まもなく発車' : `あと ${t.diff} 分`);
-        const tappable    = (t.dest === '' && currentMode === 'gofukumachi') ? 'tappable' : '';
-        const onclick     = tappable ? `onclick="switchToNakasu(${t.hr},${t.min})"` : '';
+
+        let arrivalHtml, connHtml;
+        if (t.dest === '') {
+            const conn = findConnection(t.hr, t.min);
+            if (conn) {
+                arrivalHtml = `着 ${pad(conn.finHr)}:${pad(conn.finMin)}`;
+                connHtml    = `<div class="card-conn">接続 中洲川端 ${pad(conn.connHr)}:${pad(conn.connMin)} 発</div>`;
+            } else {
+                arrivalHtml = '接続なし';
+                connHtml    = '';
+            }
+        } else {
+            arrivalHtml = `着 ${arrivalTime(t.hr, t.min, 17)}`;
+            connHtml    = '';
+        }
+
         return `<div class="card ${isNextTrain ? 'first' : ''} ${isPast ? 'past' : ''}">
             <div class="card-left">
                 ${isNextTrain ? '<div class="card-label">次の電車</div>' : ''}
                 <div class="card-times">
                     <div class="card-time">${pad(t.hr)}:${pad(t.min)}</div>
-                    <div class="card-arrival">着 ${arrivalTime(t.hr, t.min)}</div>
+                    <div class="card-arrival">${arrivalHtml}</div>
                 </div>
+                ${connHtml}
                 <div class="card-wait">${wait}</div>
             </div>
-            <div class="dest ${cls} ${tappable}" ${onclick}>${label}</div>
+            <div class="dest ${cls}">${label}</div>
         </div>`;
     }).join('');
 }
 
-function setTheme(mode) {
-    const root = document.documentElement;
-    if (mode === 'nakasu') {
-        root.style.setProperty('--accent',     '#c0392b');
-        root.style.setProperty('--accent-sub', '#7f1d1d');
-        document.body.style.background = '#f2e8e8';
-    } else {
-        root.style.setProperty('--accent',     '#1a2a3a');
-        root.style.setProperty('--accent-sub', '#4b5563');
-        document.body.style.background = '#e8edf2';
-    }
-}
-
-function switchToNakasu(deptHr, deptMin) {
-    currentMode    = 'nakasu';
-    const adjH     = deptHr < 5 ? deptHr + 24 : deptHr;
-    nakasuRefTotal = adjH * 60 + deptMin + 2;
-    document.getElementById('h1-title').textContent = '中洲川端 → 姪浜';
-    document.getElementById('h1-sub').textContent   = '福岡市地下鉄 空港線（令和8年4月1日改正）';
-    document.getElementById('back-link').style.display = 'block';
-    setTheme('nakasu');
-    const all = getAllTrains();
-    renderAt(Math.max(0, all.findIndex(t => t.diff > 0)));
-}
-
-function switchToGofukumachi() {
-    currentMode = 'gofukumachi';
-    document.getElementById('h1-title').textContent = '呉服町 → 姪浜方面';
-    document.getElementById('h1-sub').textContent   = '福岡市地下鉄 箱崎線（令和8年4月1日改正）';
-    document.getElementById('back-link').style.display = 'none';
-    setTheme('gofukumachi');
-    trainShown = false;
-    document.getElementById('trains').innerHTML = '';
-}
-
-function showNext() {
+function showNext()    {
     const all = getAllTrains();
     renderAt(Math.max(0, all.findIndex(t => t.diff > 0)));
 }
