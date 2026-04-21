@@ -88,7 +88,7 @@
         .card-wait  { font-size: 0.82rem; color: #6b7a8d; margin-top: 3px; }
 
         .dest {
-            font-size: 0.88rem;
+            font-size: 1rem;
             font-weight: 700;
             padding: 6px 13px;
             border-radius: 20px;
@@ -115,7 +115,7 @@
 </div>
 
 <header>
-    <h1 id="h1-title">呉服町 → 姪浜方面</h1>
+    <h1 id="h1-title">呉服町 → 姪浜</h1>
 </header>
 
 <div class="clock" id="clock">--:--</div>
@@ -394,7 +394,7 @@ function setDirection(dir) {
     document.getElementById('tab-out').classList.toggle('active', dir === 'outbound');
     document.getElementById('tab-ret').classList.toggle('active', dir === 'return');
     document.getElementById('h1-title').textContent =
-        dir === 'outbound' ? '呉服町 → 姪浜方面' : '姪浜 → 呉服町';
+        dir === 'outbound' ? '呉服町 → 姪浜' : '姪浜 → 呉服町';
     trainShown = false;
     document.getElementById('trains').innerHTML = '';
 }
