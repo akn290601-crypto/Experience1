@@ -54,6 +54,8 @@
             transition: transform 0.1s, opacity 0.1s;
         }
         .btn:active { transform: scale(0.96); opacity: 0.85; }
+        .btn-row { display: flex; gap: 10px; margin-bottom: 28px; }
+        .btn-sub { background: #4b5563; padding: 16px 28px; }
 
         .trains { width: 100%; max-width: 420px; }
 
@@ -105,7 +107,10 @@
 <div class="clock" id="clock">--:--</div>
 <div class="badge" id="badge"></div>
 
-<button class="btn" onclick="showNext()">次の電車を確認</button>
+<div class="btn-row">
+    <button class="btn btn-sub" onclick="showPrev()">◀ 戻る</button>
+    <button class="btn" onclick="showNext()">次の電車を確認</button>
+</div>
 
 <div class="trains" id="trains"></div>
 
@@ -189,47 +194,43 @@ function updateClock() {
 }
 
 let trainOffset = 0;
+let trainShown  = false;
 
-function showNext() {
-    const now  = new Date();
-    const h    = now.getHours();
-    const m    = now.getMinutes();
-    // 深夜0時台は「24時台」として扱う
+function getUpcoming() {
+    const now      = new Date();
+    const h        = now.getHours();
+    const m        = now.getMinutes();
     const nowTotal = (h < 5 ? h + 24 : h) * 60 + m;
-
-    const type  = getDayType(now);
-    const table = timetable[type];
-
+    const table    = timetable[getDayType(now)];
     const upcoming = [];
     for (let hr = 5; hr <= 24; hr++) {
         const key    = hr === 24 ? 0 : hr;
         const trains = table[key];
         if (!trains) continue;
         for (const t of trains) {
-            const total = hr * 60 + t.m;
-            if (total > nowTotal) {
-                upcoming.push({ hr: key, min: t.m, dest: t.d, diff: total - nowTotal });
-            }
+            if (hr * 60 + t.m > nowTotal)
+                upcoming.push({ hr: key, min: t.m, dest: t.d, diff: hr * 60 + t.m - nowTotal });
         }
     }
+    return upcoming;
+}
 
+function renderAt(offset) {
+    const upcoming  = getUpcoming();
     const container = document.getElementById('trains');
     if (upcoming.length === 0) {
-        trainOffset = 0;
+        trainOffset = 0; trainShown = false;
         container.innerHTML = '<div class="empty">本日の電車は終了しました</div>';
         return;
     }
-
-    if (trainOffset >= upcoming.length) trainOffset = 0;
-    const offset = trainOffset;
-    trainOffset = (trainOffset + 1) % upcoming.length;
-
-    container.innerHTML = upcoming.slice(offset, offset + 3).map((t, i) => {
+    trainOffset = ((offset % upcoming.length) + upcoming.length) % upcoming.length;
+    trainShown  = true;
+    container.innerHTML = upcoming.slice(trainOffset, trainOffset + 3).map((t, i) => {
         const { label, cls } = destInfo(t.dest);
         const wait = t.diff <= 1 ? 'まもなく発車' : `あと ${t.diff} 分`;
         return `<div class="card ${i === 0 ? 'first' : ''}">
             <div class="card-left">
-                ${i === 0 && offset === 0 ? '<div class="card-label">次の電車</div>' : ''}
+                ${i === 0 && trainOffset === 0 ? '<div class="card-label">次の電車</div>' : ''}
                 <div class="card-times">
                     <div class="card-time">${pad(t.hr)}:${pad(t.min)}</div>
                     <div class="card-arrival">着 ${arrivalTime(t.hr, t.min)}</div>
@@ -240,6 +241,9 @@ function showNext() {
         </div>`;
     }).join('');
 }
+
+function showNext() { renderAt(trainShown ? trainOffset + 1 : 0); }
+function showPrev() { if (trainShown) renderAt(trainOffset - 1); }
 
 updateClock();
 setInterval(updateClock, 15000);
