@@ -208,7 +208,7 @@ function showNext() {
         return;
     }
 
-    container.innerHTML = upcoming.slice(0, 5).map((t, i) => {
+    container.innerHTML = upcoming.slice(0, 3).map((t, i) => {
         const { label, cls } = destInfo(t.dest);
         const wait = t.diff <= 1 ? 'まもなく発車' : `あと ${t.diff} 分`;
         return `<div class="card ${i === 0 ? 'first' : ''}">
