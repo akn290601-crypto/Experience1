@@ -14,11 +14,11 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 8px 16px;
+            padding: 16px 16px;
             color: #1a2a3a;
         }
 
-        .tabs { display: flex; gap: 8px; margin-bottom: 8px; }
+        .tabs { display: flex; gap: 8px; margin-bottom: 14px; }
         .tab {
             background: #d1d5db; color: #4b5563;
             border: none; padding: 8px 18px; border-radius: 20px;
@@ -27,24 +27,24 @@
         }
         .tab.active { background: #1a2a3a; color: white; }
 
-        header { text-align: center; margin-bottom: 4px; }
-        header h1 { font-size: 1.1rem; font-weight: 700; }
+        header { text-align: center; margin-bottom: 10px; }
+        header h1 { font-size: 1.3rem; font-weight: 700; }
 
         .clock {
-            font-size: 3.2rem;
+            font-size: 3.8rem;
             font-weight: 200;
             letter-spacing: 3px;
             font-variant-numeric: tabular-nums;
-            margin-bottom: 2px;
+            margin-bottom: 6px;
         }
 
         .badge {
             display: inline-block;
-            padding: 3px 12px;
+            padding: 4px 16px;
             border-radius: 20px;
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             font-weight: 600;
-            margin-bottom: 10px;
+            margin-bottom: 18px;
         }
         .badge.weekday { background: #dbeafe; color: #1d4ed8; }
         .badge.holiday { background: #fce7f3; color: #be185d; }
@@ -53,8 +53,8 @@
             background: #1a2a3a;
             color: white;
             border: none;
-            padding: 12px 36px;
-            font-size: 1rem;
+            padding: 16px 52px;
+            font-size: 1.1rem;
             font-weight: 600;
             border-radius: 50px;
             cursor: pointer;
@@ -62,35 +62,35 @@
             transition: transform 0.1s, opacity 0.1s;
         }
         .btn:active { transform: scale(0.96); opacity: 0.85; }
-        .btn-row { display: flex; gap: 10px; margin-bottom: 12px; }
-        .btn-sub { background: #4b5563; padding: 12px 14px; }
+        .btn-row { display: flex; gap: 10px; margin-bottom: 16px; }
+        .btn-sub { background: #4b5563; padding: 16px 20px; }
 
         .trains { width: 100%; max-width: 420px; }
 
         .card {
             background: white;
             border-radius: 14px;
-            padding: 10px 14px;
-            margin-bottom: 6px;
+            padding: 14px 18px;
+            margin-bottom: 8px;
             box-shadow: 0 1px 6px rgba(0,0,0,0.07);
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 16px;
         }
         .card.first { border-left: 5px solid #1a2a3a; }
 
         .card-left { flex: 1; }
         .card-label { font-size: 0.72rem; color: #9ca3af; margin-bottom: 2px; }
-        .card-times { display: flex; align-items: baseline; gap: 8px; }
-        .card-time  { font-size: 1.8rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: 1px; }
-        .card-arrival { font-size: 0.9rem; color: #6b7a8d; font-weight: 500; font-variant-numeric: tabular-nums; }
+        .card-times { display: flex; align-items: baseline; gap: 10px; }
+        .card-time  { font-size: 2rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: 1px; }
+        .card-arrival { font-size: 1rem; color: #6b7a8d; font-weight: 500; font-variant-numeric: tabular-nums; }
         .card-conn  { font-size: 0.78rem; color: #9ca3af; margin-top: 2px; }
-        .card-wait  { font-size: 0.8rem; color: #6b7a8d; margin-top: 2px; }
+        .card-wait  { font-size: 0.82rem; color: #6b7a8d; margin-top: 3px; }
 
         .dest {
-            font-size: 0.85rem;
+            font-size: 0.88rem;
             font-weight: 700;
-            padding: 5px 12px;
+            padding: 6px 13px;
             border-radius: 20px;
             white-space: nowrap;
         }
