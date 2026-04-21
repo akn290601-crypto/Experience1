@@ -14,11 +14,11 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 28px 16px;
+            padding: 8px 16px;
             color: #1a2a3a;
         }
 
-        .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+        .tabs { display: flex; gap: 8px; margin-bottom: 8px; }
         .tab {
             background: #d1d5db; color: #4b5563;
             border: none; padding: 8px 18px; border-radius: 20px;
@@ -27,25 +27,24 @@
         }
         .tab.active { background: #1a2a3a; color: white; }
 
-        header { text-align: center; margin-bottom: 20px; }
-        header h1 { font-size: 1.3rem; font-weight: 700; }
-        header p  { font-size: 0.85rem; color: #6b7a8d; margin-top: 4px; }
+        header { text-align: center; margin-bottom: 4px; }
+        header h1 { font-size: 1.1rem; font-weight: 700; }
 
         .clock {
-            font-size: 3.8rem;
+            font-size: 3.2rem;
             font-weight: 200;
             letter-spacing: 3px;
             font-variant-numeric: tabular-nums;
-            margin-bottom: 10px;
+            margin-bottom: 2px;
         }
 
         .badge {
             display: inline-block;
-            padding: 4px 16px;
+            padding: 3px 12px;
             border-radius: 20px;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 600;
-            margin-bottom: 28px;
+            margin-bottom: 10px;
         }
         .badge.weekday { background: #dbeafe; color: #1d4ed8; }
         .badge.holiday { background: #fce7f3; color: #be185d; }
@@ -54,57 +53,56 @@
             background: #1a2a3a;
             color: white;
             border: none;
-            padding: 16px 52px;
-            font-size: 1.1rem;
+            padding: 12px 36px;
+            font-size: 1rem;
             font-weight: 600;
             border-radius: 50px;
             cursor: pointer;
-            margin-bottom: 28px;
+            margin-bottom: 0;
             transition: transform 0.1s, opacity 0.1s;
         }
         .btn:active { transform: scale(0.96); opacity: 0.85; }
-        .btn-row { display: flex; gap: 10px; margin-bottom: 0; }
-        .btn-sub { background: #4b5563; padding: 16px 20px; }
+        .btn-row { display: flex; gap: 10px; margin-bottom: 12px; }
+        .btn-sub { background: #4b5563; padding: 12px 14px; }
 
         .trains { width: 100%; max-width: 420px; }
 
         .card {
             background: white;
             border-radius: 14px;
-            padding: 16px 20px;
-            margin-bottom: 10px;
+            padding: 10px 14px;
+            margin-bottom: 6px;
             box-shadow: 0 1px 6px rgba(0,0,0,0.07);
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 14px;
         }
         .card.first { border-left: 5px solid #1a2a3a; }
 
         .card-left { flex: 1; }
         .card-label { font-size: 0.72rem; color: #9ca3af; margin-bottom: 2px; }
-        .card-times { display: flex; align-items: baseline; gap: 10px; }
-        .card-time  { font-size: 2rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: 1px; }
-        .card-arrival { font-size: 1rem; color: #6b7a8d; font-weight: 500; font-variant-numeric: tabular-nums; }
+        .card-times { display: flex; align-items: baseline; gap: 8px; }
+        .card-time  { font-size: 1.8rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: 1px; }
+        .card-arrival { font-size: 0.9rem; color: #6b7a8d; font-weight: 500; font-variant-numeric: tabular-nums; }
         .card-conn  { font-size: 0.78rem; color: #9ca3af; margin-top: 2px; }
-        .card-wait  { font-size: 0.82rem; color: #6b7a8d; margin-top: 3px; }
+        .card-wait  { font-size: 0.8rem; color: #6b7a8d; margin-top: 2px; }
 
         .dest {
-            font-size: 0.88rem;
+            font-size: 0.85rem;
             font-weight: 700;
-            padding: 6px 13px;
+            padding: 5px 12px;
             border-radius: 20px;
             white-space: nowrap;
         }
-        .dest-meinohama { background: #dbeafe; color: #1d4ed8; }
-        .dest-nishijin  { background: #fef9c3; color: #92400e; }
-        .dest-nakasu    { background: #f3f4f6; color: #4b5563; }
+        .dest-direct   { background: #dcfce7; color: #15803d; }
+        .dest-transfer { background: #f3f4f6; color: #4b5563; }
 
         .card.past { opacity: 0.45; }
 
         .empty {
             text-align: center;
             color: #9ca3af;
-            padding: 40px 0;
+            padding: 20px 0;
             font-size: 1rem;
         }
     </style>
@@ -363,10 +361,18 @@ function findConnection(deptHr, deptMin) {
     return null;
 }
 
-function destInfo(d) {
-    if (d === '姪') return { label: '姪浜', cls: 'dest-meinohama' };
-    if (d === '西') return { label: '西新',  cls: 'dest-nishijin'  };
-    return                 { label: '中洲川端', cls: 'dest-nakasu' };
+function isDirectTrain(hr, min) {
+    const type  = getDayType(new Date());
+    const table = hakazakiReturnTimetable[type];
+    const total = (hr < 5 ? hr + 24 : hr) * 60 + min + 15;
+    const key   = Math.floor(total / 60) % 24;
+    return (table[key] || []).some(t => t.m === total % 60);
+}
+
+function destBadge(isDirect) {
+    return isDirect
+        ? { label: '直通', cls: 'dest-direct' }
+        : { label: '乗換', cls: 'dest-transfer' };
 }
 
 function updateClock() {
@@ -448,34 +454,33 @@ function renderAt(offset) {
     trainOffset = Math.max(0, Math.min(offset, all.length - 1));
     trainShown  = true;
     container.innerHTML = all.slice(trainOffset, trainOffset + 3).map((t, i) => {
-        const { label, cls } = destInfo(t.dest);
         const isPast      = t.diff <= 0;
         const isNextTrain = trainOffset + i === nextIdx;
         const wait        = isPast ? '発車済' : (t.diff <= 1 ? 'まもなく発車' : `あと ${t.diff} 分`);
 
-        let arrivalHtml, connHtml;
+        let isDirect, arrivalHtml, connHtml;
         if (direction === 'return') {
-            const conn = findReturnConnection(t.hr, t.min);
-            if (conn) {
-                arrivalHtml = `着 ${pad(conn.finHr)}:${pad(conn.finMin)}`;
-                connHtml    = `<div class="card-conn">接続 中洲川端 ${pad(conn.connHr)}:${pad(conn.connMin)} 発</div>`;
-            } else {
-                arrivalHtml = '接続なし';
+            isDirect = isDirectTrain(t.hr, t.min);
+            if (isDirect) {
+                arrivalHtml = `着 ${arrivalTime(t.hr, t.min, 17)}`;
                 connHtml    = '';
-            }
-        } else if (t.dest === '') {
-            const conn = findConnection(t.hr, t.min);
-            if (conn) {
-                arrivalHtml = `着 ${pad(conn.finHr)}:${pad(conn.finMin)}`;
-                connHtml    = `<div class="card-conn">接続 中洲川端 ${pad(conn.connHr)}:${pad(conn.connMin)} 発</div>`;
             } else {
-                arrivalHtml = '接続なし';
-                connHtml    = '';
+                const conn = findReturnConnection(t.hr, t.min);
+                arrivalHtml = conn ? `着 ${pad(conn.finHr)}:${pad(conn.finMin)}` : '接続なし';
+                connHtml    = conn ? `<div class="card-conn">接続 中洲川端 ${pad(conn.connHr)}:${pad(conn.connMin)} 発</div>` : '';
             }
         } else {
-            arrivalHtml = `着 ${arrivalTime(t.hr, t.min, 17)}`;
-            connHtml    = '';
+            isDirect = t.dest !== '';
+            if (isDirect) {
+                arrivalHtml = `着 ${arrivalTime(t.hr, t.min, 17)}`;
+                connHtml    = '';
+            } else {
+                const conn = findConnection(t.hr, t.min);
+                arrivalHtml = conn ? `着 ${pad(conn.finHr)}:${pad(conn.finMin)}` : '接続なし';
+                connHtml    = conn ? `<div class="card-conn">接続 中洲川端 ${pad(conn.connHr)}:${pad(conn.connMin)} 発</div>` : '';
+            }
         }
+        const { label, cls } = destBadge(isDirect);
 
         return `<div class="card ${isNextTrain ? 'first' : ''} ${isPast ? 'past' : ''}">
             <div class="card-left">
