@@ -72,6 +72,7 @@
         .card-left { flex: 1; }
         .card-label { font-size: 0.72rem; color: #9ca3af; margin-bottom: 2px; }
         .card-time  { font-size: 2rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: 1px; }
+        .card-arrival { font-size: 0.78rem; color: #374151; font-weight: 600; margin-top: 1px; }
         .card-wait  { font-size: 0.82rem; color: #6b7a8d; margin-top: 3px; }
 
         .dest {
@@ -145,14 +146,14 @@ const timetable = {
         14: [{m:4,d:"西"},{m:12,d:""},{m:19,d:"西"},{m:27,d:""},{m:36,d:""},{m:42,d:""},{m:52,d:"姪"},{m:57,d:""}],
         15: [{m:4,d:"西"},{m:12,d:""},{m:19,d:"西"},{m:27,d:""},{m:34,d:""},{m:42,d:""},{m:49,d:"姪"},{m:57,d:""}],
         16: [{m:7,d:"姪"},{m:14,d:"姪"},{m:23,d:"姪"},{m:29,d:"姪"},{m:37,d:""},{m:43,d:""},{m:51,d:""},{m:57,d:""}],
-        17: [{m:5,d:"姪"},{m:13,d:"姪"},{m:20,d:""},{m:28,d:"姪"},{m:37,d:"姪"},{m:48,d:""},{m:57,d:""}],
+        17: [{m:5,d:"姪"},{m:13,d:"姪"},{m:20,d:""},{m:28,d:"姪"},{m:37,d:""},{m:48,d:"姪"},{m:57,d:""}],
         18: [{m:9,d:"姪"},{m:20,d:""},{m:30,d:""},{m:39,d:""},{m:47,d:""},{m:56,d:""}],
         19: [{m:6,d:""},{m:17,d:""},{m:23,d:"姪"},{m:34,d:""},{m:44,d:"姪"},{m:56,d:"姪"}],
-        20: [{m:2,d:""},{m:11,d:""},{m:21,d:""},{m:33,d:"姪"},{m:46,d:"姪"},{m:59,d:""}],
+        20: [{m:2,d:""},{m:11,d:"姪"},{m:21,d:""},{m:33,d:"姪"},{m:46,d:"姪"},{m:59,d:""}],
         21: [{m:11,d:"姪"},{m:23,d:"姪"},{m:34,d:"姪"},{m:46,d:""},{m:57,d:""}],
-        22: [{m:7,d:""},{m:16,d:""},{m:26,d:"姪"},{m:36,d:"姪"},{m:48,d:""}],
+        22: [{m:7,d:"姪"},{m:16,d:""},{m:26,d:"姪"},{m:36,d:"姪"},{m:48,d:"姪"}],
         23: [{m:2,d:""},{m:21,d:"姪"},{m:32,d:"姪"},{m:44,d:"姪"}],
-         0: [{m:2,d:"姪"},{m:28,d:""}], // 土曜のみ運行
+         0: [{m:2,d:"姪"},{m:28,d:"姪"}], // 土曜のみ運行
     }
 };
 
@@ -162,6 +163,13 @@ function getDayType(date) {
 }
 
 function pad(n) { return String(n).padStart(2, '0'); }
+
+function arrivalTime(hr, min) {
+    let ah = hr, am = min + 17;
+    if (am >= 60) { ah++; am -= 60; }
+    if (ah >= 24) ah -= 24;
+    return pad(ah) + ':' + pad(am);
+}
 
 function destInfo(d) {
     if (d === '姪') return { label: '姪浜', cls: 'dest-meinohama' };
@@ -215,6 +223,7 @@ function showNext() {
             <div class="card-left">
                 ${i === 0 ? '<div class="card-label">次の電車</div>' : ''}
                 <div class="card-time">${pad(t.hr)}:${pad(t.min)}</div>
+                <div class="card-arrival">着 ${arrivalTime(t.hr, t.min)}</div>
                 <div class="card-wait">${wait}</div>
             </div>
             <div class="dest ${cls}">${label}</div>
