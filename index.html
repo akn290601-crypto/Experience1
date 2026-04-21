@@ -54,7 +54,7 @@
             transition: transform 0.1s, opacity 0.1s;
         }
         .btn:active { transform: scale(0.96); opacity: 0.85; }
-        .btn-row { display: flex; gap: 10px; margin-bottom: 4px; }
+        .btn-row { display: flex; gap: 10px; margin-bottom: 0; }
         .btn-sub { background: #4b5563; padding: 16px 20px; }
 
         .trains { width: 100%; max-width: 420px; }
@@ -111,6 +111,7 @@
 
 <div class="btn-row">
     <button class="btn btn-sub" onclick="showPrev()">◀</button>
+    <button class="btn btn-sub" onclick="showForward()">▶</button>
     <button class="btn" onclick="showNext()">次の電車を確認</button>
 </div>
 
@@ -246,14 +247,11 @@ function renderAt(offset) {
 }
 
 function showNext() {
-    if (!trainShown) {
-        const all = getAllTrains();
-        renderAt(Math.max(0, all.findIndex(t => t.diff > 0)));
-    } else {
-        renderAt(trainOffset + 1);
-    }
+    const all = getAllTrains();
+    renderAt(Math.max(0, all.findIndex(t => t.diff > 0)));
 }
-function showPrev() { if (trainShown) renderAt(trainOffset - 1); }
+function showForward() { if (trainShown) renderAt(trainOffset + 1); }
+function showPrev()    { if (trainShown) renderAt(trainOffset - 1); }
 
 updateClock();
 setInterval(updateClock, 15000);
