@@ -24,7 +24,7 @@
         #back-link {
             display: none;
             font-size: 0.82rem;
-            color: #1d4ed8;
+            color: var(--accent, #1d4ed8);
             margin-top: 6px;
             cursor: pointer;
             text-decoration: underline;
@@ -50,7 +50,7 @@
         .badge.holiday { background: #fce7f3; color: #be185d; }
 
         .btn {
-            background: #1a2a3a;
+            background: var(--accent, #1a2a3a);
             color: white;
             border: none;
             padding: 16px 52px;
@@ -59,11 +59,11 @@
             border-radius: 50px;
             cursor: pointer;
             margin-bottom: 28px;
-            transition: transform 0.1s, opacity 0.1s;
+            transition: transform 0.1s, opacity 0.1s, background 0.3s;
         }
         .btn:active { transform: scale(0.96); opacity: 0.85; }
         .btn-row { display: flex; gap: 10px; margin-bottom: 0; }
-        .btn-sub { background: #4b5563; padding: 16px 20px; }
+        .btn-sub { background: var(--accent-sub, #4b5563); padding: 16px 20px; }
 
         .trains { width: 100%; max-width: 420px; }
 
@@ -77,7 +77,7 @@
             align-items: center;
             gap: 16px;
         }
-        .card.first { border-left: 5px solid #1a2a3a; }
+        .card.first { border-left: 5px solid var(--accent, #1a2a3a); }
 
         .card-left { flex: 1; }
         .card-label { font-size: 0.72rem; color: #9ca3af; margin-bottom: 2px; }
@@ -323,6 +323,19 @@ function renderAt(offset) {
     }).join('');
 }
 
+function setTheme(mode) {
+    const root = document.documentElement;
+    if (mode === 'nakasu') {
+        root.style.setProperty('--accent',     '#c0392b');
+        root.style.setProperty('--accent-sub', '#7f1d1d');
+        document.body.style.background = '#f2e8e8';
+    } else {
+        root.style.setProperty('--accent',     '#1a2a3a');
+        root.style.setProperty('--accent-sub', '#4b5563');
+        document.body.style.background = '#e8edf2';
+    }
+}
+
 function switchToNakasu(deptHr, deptMin) {
     currentMode    = 'nakasu';
     const adjH     = deptHr < 5 ? deptHr + 24 : deptHr;
@@ -330,6 +343,7 @@ function switchToNakasu(deptHr, deptMin) {
     document.getElementById('h1-title').textContent = '中洲川端 → 姪浜';
     document.getElementById('h1-sub').textContent   = '福岡市地下鉄 空港線（令和8年4月1日改正）';
     document.getElementById('back-link').style.display = 'block';
+    setTheme('nakasu');
     const all = getAllTrains();
     renderAt(Math.max(0, all.findIndex(t => t.diff > 0)));
 }
@@ -339,6 +353,7 @@ function switchToGofukumachi() {
     document.getElementById('h1-title').textContent = '呉服町 → 姪浜方面';
     document.getElementById('h1-sub').textContent   = '福岡市地下鉄 箱崎線（令和8年4月1日改正）';
     document.getElementById('back-link').style.display = 'none';
+    setTheme('gofukumachi');
     trainShown = false;
     document.getElementById('trains').innerHTML = '';
 }
