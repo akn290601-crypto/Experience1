@@ -18,6 +18,15 @@
             color: #1a2a3a;
         }
 
+        .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+        .tab {
+            background: #d1d5db; color: #4b5563;
+            border: none; padding: 8px 18px; border-radius: 20px;
+            cursor: pointer; font-size: 0.85rem; font-weight: 600;
+            transition: background 0.15s, color 0.15s;
+        }
+        .tab.active { background: #1a2a3a; color: white; }
+
         header { text-align: center; margin-bottom: 20px; }
         header h1 { font-size: 1.3rem; font-weight: 700; }
         header p  { font-size: 0.85rem; color: #6b7a8d; margin-top: 4px; }
@@ -102,8 +111,13 @@
 </head>
 <body>
 
+<div class="tabs">
+    <button class="tab active" id="tab-out" onclick="setDirection('outbound')">呉服町 → 姪浜</button>
+    <button class="tab"        id="tab-ret" onclick="setDirection('return')">姪浜 → 呉服町</button>
+</div>
+
 <header>
-    <h1>呉服町 → 姪浜方面</h1>
+    <h1 id="h1-title">呉服町 → 姪浜方面</h1>
 </header>
 
 <div class="clock" id="clock">--:--</div>
@@ -164,6 +178,18 @@ const timetable = {
         23: [{m:2,d:""},{m:21,d:"姪"},{m:32,d:"姪"},{m:44,d:"姪"}],
          0: [{m:2,d:"姪"},{m:28,d:"姪"}],
     }
+};
+
+// 姪浜 → 中洲川端方面（空港線 東行き）※時刻表データ未設定
+const meinohamaTimetable = {
+    weekday: {},
+    holiday: {}
+};
+
+// 中洲川端 → 呉服町方面（箱崎線 東行き）※時刻表データ未設定
+const hakazakiReturnTimetable = {
+    weekday: {},
+    holiday: {}
 };
 
 // 中洲川端 → 姪浜方面（空港線）
@@ -271,22 +297,59 @@ function updateClock() {
 
 let trainOffset = 0;
 let trainShown  = false;
+let direction   = 'outbound'; // 'outbound' | 'return'
+
+function setDirection(dir) {
+    direction = dir;
+    document.getElementById('tab-out').classList.toggle('active', dir === 'outbound');
+    document.getElementById('tab-ret').classList.toggle('active', dir === 'return');
+    document.getElementById('h1-title').textContent =
+        dir === 'outbound' ? '呉服町 → 姪浜方面' : '姪浜 → 呉服町';
+    trainShown = false;
+    document.getElementById('trains').innerHTML = '';
+}
 
 function getAllTrains() {
     const now      = new Date();
     const h        = now.getHours();
     const m        = now.getMinutes();
     const nowTotal = (h < 5 ? h + 24 : h) * 60 + m;
-    const table    = timetable[getDayType(now)];
+    const type     = getDayType(now);
+    const table    = direction === 'return' ? meinohamaTimetable[type] : timetable[type];
     const all      = [];
     for (let hr = 5; hr <= 24; hr++) {
         const key    = hr === 24 ? 0 : hr;
         const trains = table[key];
         if (!trains) continue;
         for (const t of trains)
-            all.push({ hr: key, min: t.m, dest: t.d, diff: hr * 60 + t.m - nowTotal });
+            all.push({ hr: key, min: t.m, dest: t.d || '', diff: hr * 60 + t.m - nowTotal });
     }
     return all;
+}
+
+// 姪浜発 → 中洲川端着後の箱崎線接続を検索
+function findReturnConnection(deptHr, deptMin) {
+    const type  = getDayType(new Date());
+    const table = hakazakiReturnTimetable[type];
+    const adjH  = deptHr < 5 ? deptHr + 24 : deptHr;
+    const ref   = adjH * 60 + deptMin + 15; // 中洲川端着（姪浜+15分）
+    for (let hr = 5; hr <= 24; hr++) {
+        const key    = hr === 24 ? 0 : hr;
+        const trains = table[key];
+        if (!trains) continue;
+        for (const t of trains) {
+            if (hr * 60 + t.m > ref) {
+                const finTotal = hr * 60 + t.m + 2;
+                return {
+                    connHr:  key,
+                    connMin: t.m,
+                    finHr:   Math.floor(finTotal / 60) % 24,
+                    finMin:  finTotal % 60,
+                };
+            }
+        }
+    }
+    return null;
 }
 
 function renderAt(offset) {
@@ -307,7 +370,16 @@ function renderAt(offset) {
         const wait        = isPast ? '発車済' : (t.diff <= 1 ? 'まもなく発車' : `あと ${t.diff} 分`);
 
         let arrivalHtml, connHtml;
-        if (t.dest === '') {
+        if (direction === 'return') {
+            const conn = findReturnConnection(t.hr, t.min);
+            if (conn) {
+                arrivalHtml = `着 ${pad(conn.finHr)}:${pad(conn.finMin)}`;
+                connHtml    = `<div class="card-conn">接続 中洲川端 ${pad(conn.connHr)}:${pad(conn.connMin)} 発</div>`;
+            } else {
+                arrivalHtml = '接続なし';
+                connHtml    = '';
+            }
+        } else if (t.dest === '') {
             const conn = findConnection(t.hr, t.min);
             if (conn) {
                 arrivalHtml = `着 ${pad(conn.finHr)}:${pad(conn.finMin)}`;
