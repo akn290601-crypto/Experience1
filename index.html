@@ -71,8 +71,9 @@
 
         .card-left { flex: 1; }
         .card-label { font-size: 0.72rem; color: #9ca3af; margin-bottom: 2px; }
+        .card-times { display: flex; align-items: baseline; gap: 10px; }
         .card-time  { font-size: 2rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: 1px; }
-        .card-arrival { font-size: 0.78rem; color: #374151; font-weight: 600; margin-top: 1px; }
+        .card-arrival { font-size: 1rem; color: #6b7a8d; font-weight: 500; font-variant-numeric: tabular-nums; }
         .card-wait  { font-size: 0.82rem; color: #6b7a8d; margin-top: 3px; }
 
         .dest {
@@ -222,8 +223,10 @@ function showNext() {
         return `<div class="card ${i === 0 ? 'first' : ''}">
             <div class="card-left">
                 ${i === 0 ? '<div class="card-label">次の電車</div>' : ''}
-                <div class="card-time">${pad(t.hr)}:${pad(t.min)}</div>
-                <div class="card-arrival">着 ${arrivalTime(t.hr, t.min)}</div>
+                <div class="card-times">
+                    <div class="card-time">${pad(t.hr)}:${pad(t.min)}</div>
+                    <div class="card-arrival">着 ${arrivalTime(t.hr, t.min)}</div>
+                </div>
                 <div class="card-wait">${wait}</div>
             </div>
             <div class="dest ${cls}">${label}</div>
