@@ -21,6 +21,14 @@
         header { text-align: center; margin-bottom: 20px; }
         header h1 { font-size: 1.3rem; font-weight: 700; }
         header p  { font-size: 0.85rem; color: #6b7a8d; margin-top: 4px; }
+        #back-link {
+            display: none;
+            font-size: 0.82rem;
+            color: #1d4ed8;
+            margin-top: 6px;
+            cursor: pointer;
+            text-decoration: underline;
+        }
 
         .clock {
             font-size: 3.8rem;
@@ -88,6 +96,8 @@
         .dest-meinohama { background: #dbeafe; color: #1d4ed8; }
         .dest-nishijin  { background: #fef9c3; color: #92400e; }
         .dest-nakasu    { background: #f3f4f6; color: #4b5563; }
+        .dest-nakasu.tappable { cursor: pointer; background: #e5e7eb; }
+        .dest-nakasu.tappable:active { opacity: 0.6; }
 
         .card.past { opacity: 0.45; }
 
@@ -102,8 +112,9 @@
 <body>
 
 <header>
-    <h1>呉服町 → 姪浜方面</h1>
-    <p>福岡市地下鉄 箱崎線（令和8年4月1日改正）</p>
+    <h1 id="h1-title">呉服町 → 姪浜方面</h1>
+    <p id="h1-sub">福岡市地下鉄 箱崎線（令和8年4月1日改正）</p>
+    <p id="back-link" onclick="switchToGofukumachi()">← 呉服町に戻る</p>
 </header>
 
 <div class="clock" id="clock">--:--</div>
@@ -166,6 +177,54 @@ const timetable = {
     }
 };
 
+// 中洲川端 → 姪浜方面（空港線）平日時刻表
+const nakasuTimetable = {
+    weekday: {
+         5: [{m:34},{m:52}],
+         6: [{m:10},{m:21},{m:32},{m:46},{m:55}],
+         7: [{m:5},{m:10},{m:16},{m:25},{m:33},{m:36},{m:40},{m:47},{m:51},{m:56}],
+         8: [{m:0},{m:3},{m:6},{m:10},{m:13},{m:18},{m:21},{m:23},{m:28},{m:31},{m:34},{m:37},{m:40},{m:43},{m:48},{m:51},{m:54},{m:57}],
+         9: [{m:0},{m:5},{m:7},{m:10},{m:14},{m:19},{m:22},{m:26},{m:29},{m:34},{m:41},{m:45},{m:48},{m:51},{m:56}],
+        10: [{m:0},{m:6},{m:12},{m:17},{m:24},{m:27},{m:32},{m:41},{m:50},{m:58}],
+        11: [{m:2},{m:10},{m:16},{m:24},{m:31},{m:40},{m:46},{m:55}],
+        12: [{m:1},{m:9},{m:16},{m:24},{m:31},{m:39},{m:46},{m:53}],
+        13: [{m:1},{m:9},{m:16},{m:24},{m:31},{m:39},{m:46},{m:54}],
+        14: [{m:1},{m:9},{m:16},{m:24},{m:31},{m:39},{m:46},{m:54}],
+        15: [{m:0},{m:8},{m:16},{m:24},{m:31},{m:39},{m:46},{m:53}],
+        16: [{m:0},{m:10},{m:16},{m:24},{m:31},{m:39},{m:47},{m:53},{m:59}],
+        17: [{m:4},{m:10},{m:15},{m:19},{m:24},{m:28},{m:33},{m:38},{m:43},{m:48},{m:51},{m:55}],
+        18: [{m:0},{m:4},{m:8},{m:14},{m:17},{m:21},{m:25},{m:29},{m:34},{m:38},{m:41},{m:48},{m:51},{m:54},{m:59}],
+        19: [{m:4},{m:8},{m:14},{m:19},{m:24},{m:29},{m:34},{m:38},{m:44},{m:49},{m:54},{m:59}],
+        20: [{m:3},{m:9},{m:16},{m:22},{m:30},{m:37},{m:44},{m:51},{m:58}],
+        21: [{m:4},{m:12},{m:20},{m:28},{m:35},{m:43},{m:51},{m:58}],
+        22: [{m:7},{m:14},{m:22},{m:28},{m:35},{m:44},{m:52}],
+        23: [{m:2},{m:11},{m:19},{m:30},{m:42},{m:51},{m:57}],
+         0: [{m:10},{m:24},{m:44}],
+    },
+    holiday: {
+         5: [{m:34},{m:52}],
+         6: [{m:8},{m:20},{m:27},{m:42},{m:55}],
+         7: [{m:5},{m:10},{m:16},{m:25},{m:33},{m:36},{m:40},{m:47},{m:51},{m:56}],
+         8: [{m:0},{m:3},{m:6},{m:10},{m:13},{m:18},{m:21},{m:23},{m:28},{m:31},{m:34},{m:37},{m:40},{m:43},{m:48},{m:51},{m:54},{m:57}],
+         9: [{m:0},{m:5},{m:7},{m:10},{m:14},{m:19},{m:22},{m:26},{m:29},{m:34},{m:41},{m:45},{m:48},{m:51},{m:56}],
+        10: [{m:0},{m:6},{m:12},{m:17},{m:24},{m:27},{m:32},{m:41},{m:50},{m:58}],
+        11: [{m:2},{m:10},{m:16},{m:24},{m:31},{m:40},{m:46},{m:55}],
+        12: [{m:1},{m:9},{m:16},{m:24},{m:31},{m:39},{m:46},{m:53}],
+        13: [{m:1},{m:9},{m:16},{m:24},{m:31},{m:39},{m:46},{m:54}],
+        14: [{m:1},{m:9},{m:16},{m:24},{m:31},{m:39},{m:46},{m:54}],
+        15: [{m:0},{m:8},{m:16},{m:24},{m:31},{m:39},{m:46},{m:53}],
+        16: [{m:0},{m:10},{m:16},{m:24},{m:31},{m:39},{m:47},{m:53},{m:59}],
+        17: [{m:4},{m:10},{m:15},{m:19},{m:24},{m:28},{m:33},{m:38},{m:43},{m:48},{m:51},{m:55}],
+        18: [{m:0},{m:4},{m:8},{m:14},{m:17},{m:21},{m:25},{m:29},{m:34},{m:38},{m:41},{m:48},{m:51},{m:54},{m:59}],
+        19: [{m:4},{m:8},{m:14},{m:19},{m:24},{m:29},{m:34},{m:38},{m:44},{m:49},{m:54},{m:59}],
+        20: [{m:3},{m:9},{m:16},{m:22},{m:30},{m:37},{m:44},{m:51},{m:58}],
+        21: [{m:4},{m:12},{m:20},{m:28},{m:35},{m:43},{m:51},{m:58}],
+        22: [{m:7},{m:14},{m:22},{m:28},{m:35},{m:44},{m:52}],
+        23: [{m:2},{m:11},{m:19},{m:30},{m:42},{m:51},{m:57}],
+         0: [{m:10},{m:24},{m:44}],
+    }
+};
+
 function getDayType(date) {
     const d = date.getDay();
     return (d === 0 || d === 6) ? 'holiday' : 'weekday';
@@ -174,7 +233,8 @@ function getDayType(date) {
 function pad(n) { return String(n).padStart(2, '0'); }
 
 function arrivalTime(hr, min) {
-    let ah = hr, am = min + 17;
+    const duration = (currentMode === 'nakasu') ? 15 : 17;
+    let ah = hr, am = min + duration;
     if (am >= 60) { ah++; am -= 60; }
     if (ah >= 24) ah -= 24;
     return pad(ah) + ':' + pad(am);
@@ -196,10 +256,25 @@ function updateClock() {
     badge.className   = 'badge ' + (type === 'weekday' ? 'weekday' : 'holiday');
 }
 
-let trainOffset = 0;
-let trainShown  = false;
+let trainOffset   = 0;
+let trainShown    = false;
+let currentMode   = 'gofukumachi'; // 'gofukumachi' | 'nakasu'
+let nakasuRefTotal = 0;
 
 function getAllTrains() {
+    if (currentMode === 'nakasu') {
+        const type  = getDayType(new Date());
+        const table = nakasuTimetable[type];
+        const all   = [];
+        for (let hr = 5; hr <= 24; hr++) {
+            const key    = hr === 24 ? 0 : hr;
+            const trains = table[key];
+            if (!trains) continue;
+            for (const t of trains)
+                all.push({ hr: key, min: t.m, dest: '姪', diff: hr * 60 + t.m - nakasuRefTotal });
+        }
+        return all;
+    }
     const now      = new Date();
     const h        = now.getHours();
     const m        = now.getMinutes();
@@ -232,6 +307,8 @@ function renderAt(offset) {
         const isPast      = t.diff <= 0;
         const isNextTrain = trainOffset + i === nextIdx;
         const wait        = isPast ? '発車済' : (t.diff <= 1 ? 'まもなく発車' : `あと ${t.diff} 分`);
+        const tappable    = (t.dest === '' && currentMode === 'gofukumachi') ? 'tappable' : '';
+        const onclick     = tappable ? `onclick="switchToNakasu(${t.hr},${t.min})"` : '';
         return `<div class="card ${isNextTrain ? 'first' : ''} ${isPast ? 'past' : ''}">
             <div class="card-left">
                 ${isNextTrain ? '<div class="card-label">次の電車</div>' : ''}
@@ -241,9 +318,29 @@ function renderAt(offset) {
                 </div>
                 <div class="card-wait">${wait}</div>
             </div>
-            <div class="dest ${cls}">${label}</div>
+            <div class="dest ${cls} ${tappable}" ${onclick}>${label}</div>
         </div>`;
     }).join('');
+}
+
+function switchToNakasu(deptHr, deptMin) {
+    currentMode    = 'nakasu';
+    const adjH     = deptHr < 5 ? deptHr + 24 : deptHr;
+    nakasuRefTotal = adjH * 60 + deptMin + 2;
+    document.getElementById('h1-title').textContent = '中洲川端 → 姪浜';
+    document.getElementById('h1-sub').textContent   = '福岡市地下鉄 空港線（令和8年4月1日改正）';
+    document.getElementById('back-link').style.display = 'block';
+    const all = getAllTrains();
+    renderAt(Math.max(0, all.findIndex(t => t.diff > 0)));
+}
+
+function switchToGofukumachi() {
+    currentMode = 'gofukumachi';
+    document.getElementById('h1-title').textContent = '呉服町 → 姪浜方面';
+    document.getElementById('h1-sub').textContent   = '福岡市地下鉄 箱崎線（令和8年4月1日改正）';
+    document.getElementById('back-link').style.display = 'none';
+    trainShown = false;
+    document.getElementById('trains').innerHTML = '';
 }
 
 function showNext() {
