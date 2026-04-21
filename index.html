@@ -89,6 +89,8 @@
         .dest-nishijin  { background: #fef9c3; color: #92400e; }
         .dest-nakasu    { background: #f3f4f6; color: #4b5563; }
 
+        .card.past { opacity: 0.45; }
+
         .empty {
             text-align: center;
             color: #9ca3af;
@@ -196,41 +198,42 @@ function updateClock() {
 let trainOffset = 0;
 let trainShown  = false;
 
-function getUpcoming() {
+function getAllTrains() {
     const now      = new Date();
     const h        = now.getHours();
     const m        = now.getMinutes();
     const nowTotal = (h < 5 ? h + 24 : h) * 60 + m;
     const table    = timetable[getDayType(now)];
-    const upcoming = [];
+    const all      = [];
     for (let hr = 5; hr <= 24; hr++) {
         const key    = hr === 24 ? 0 : hr;
         const trains = table[key];
         if (!trains) continue;
-        for (const t of trains) {
-            if (hr * 60 + t.m > nowTotal)
-                upcoming.push({ hr: key, min: t.m, dest: t.d, diff: hr * 60 + t.m - nowTotal });
-        }
+        for (const t of trains)
+            all.push({ hr: key, min: t.m, dest: t.d, diff: hr * 60 + t.m - nowTotal });
     }
-    return upcoming;
+    return all;
 }
 
 function renderAt(offset) {
-    const upcoming  = getUpcoming();
+    const all       = getAllTrains();
     const container = document.getElementById('trains');
-    if (upcoming.length === 0) {
+    const nextIdx   = all.findIndex(t => t.diff > 0);
+    if (nextIdx === -1) {
         trainOffset = 0; trainShown = false;
         container.innerHTML = '<div class="empty">本日の電車は終了しました</div>';
         return;
     }
-    trainOffset = ((offset % upcoming.length) + upcoming.length) % upcoming.length;
+    trainOffset = Math.max(0, Math.min(offset, all.length - 1));
     trainShown  = true;
-    container.innerHTML = upcoming.slice(trainOffset, trainOffset + 3).map((t, i) => {
+    container.innerHTML = all.slice(trainOffset, trainOffset + 3).map((t, i) => {
         const { label, cls } = destInfo(t.dest);
-        const wait = t.diff <= 1 ? 'まもなく発車' : `あと ${t.diff} 分`;
-        return `<div class="card ${i === 0 ? 'first' : ''}">
+        const isPast      = t.diff <= 0;
+        const isNextTrain = trainOffset + i === nextIdx;
+        const wait        = isPast ? '発車済' : (t.diff <= 1 ? 'まもなく発車' : `あと ${t.diff} 分`);
+        return `<div class="card ${isNextTrain ? 'first' : ''} ${isPast ? 'past' : ''}">
             <div class="card-left">
-                ${i === 0 && trainOffset === 0 ? '<div class="card-label">次の電車</div>' : ''}
+                ${isNextTrain ? '<div class="card-label">次の電車</div>' : ''}
                 <div class="card-times">
                     <div class="card-time">${pad(t.hr)}:${pad(t.min)}</div>
                     <div class="card-arrival">着 ${arrivalTime(t.hr, t.min)}</div>
@@ -242,7 +245,14 @@ function renderAt(offset) {
     }).join('');
 }
 
-function showNext() { renderAt(trainShown ? trainOffset + 1 : 0); }
+function showNext() {
+    if (!trainShown) {
+        const all = getAllTrains();
+        renderAt(Math.max(0, all.findIndex(t => t.diff > 0)));
+    } else {
+        renderAt(trainOffset + 1);
+    }
+}
 function showPrev() { if (trainShown) renderAt(trainOffset - 1); }
 
 updateClock();
