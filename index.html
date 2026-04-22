@@ -366,16 +366,26 @@ function findConnection(deptHr, deptMin) {
     return null;
 }
 
-function isDirectTrain(hr, min) {
+function findDirectPassthrough(hr, min) {
     const type  = getDayType(new Date());
     const table = hakazakiReturnTimetable[type];
     const base  = (hr < 5 ? hr + 24 : hr) * 60 + min + 15;
-    for (let d = -1; d <= 1; d++) {
+    for (let d = -3; d <= 3; d++) {
         const tot = base + d;
         const key = Math.floor(tot / 60) % 24;
-        if ((table[key] || []).some(e => e.m === tot % 60)) return true;
+        for (const e of (table[key] || [])) {
+            if (e.m === tot % 60) {
+                const fin = tot + 1;
+                return { connHr: key, connMin: e.m,
+                         finHr: Math.floor(fin / 60) % 24, finMin: fin % 60 };
+            }
+        }
     }
-    return false;
+    return null;
+}
+
+function isDirectTrain(hr, min) {
+    return findDirectPassthrough(hr, min) !== null;
 }
 
 function destBadge(isDirect) {
@@ -471,7 +481,10 @@ function renderAt(offset) {
         if (direction === 'return') {
             isDirect = t.direct || isDirectTrain(t.hr, t.min);
             if (isDirect) {
-                arrivalHtml = `着 ${arrivalTime(t.hr, t.min, 16)}`;
+                const pt = findDirectPassthrough(t.hr, t.min);
+                arrivalHtml = pt
+                    ? `着 ${pad(pt.finHr)}:${pad(pt.finMin)}`
+                    : `着 ${arrivalTime(t.hr, t.min, 16)}`;
                 connHtml    = '';
             } else {
                 const conn = findReturnConnection(t.hr, t.min);
