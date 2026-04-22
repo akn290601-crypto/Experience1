@@ -361,6 +361,18 @@ function findConnection(deptHr, deptMin) {
     return null;
 }
 
+function isDirectTrain(hr, min) {
+    const type  = getDayType(new Date());
+    const table = hakazakiReturnTimetable[type];
+    const base  = (hr < 5 ? hr + 24 : hr) * 60 + min + 15;
+    for (let d = -1; d <= 1; d++) {
+        const tot = base + d;
+        const key = Math.floor(tot / 60) % 24;
+        if ((table[key] || []).some(e => e.m === tot % 60)) return true;
+    }
+    return false;
+}
+
 function destBadge(isDirect) {
     return isDirect
         ? { label: '直通', cls: 'dest-direct' }
@@ -452,7 +464,7 @@ function renderAt(offset) {
 
         let isDirect, arrivalHtml, connHtml;
         if (direction === 'return') {
-            isDirect = t.direct;
+            isDirect = t.direct || isDirectTrain(t.hr, t.min);
             if (isDirect) {
                 arrivalHtml = `着 ${arrivalTime(t.hr, t.min, 17)}`;
                 connHtml    = '';
