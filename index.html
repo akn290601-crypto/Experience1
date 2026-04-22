@@ -97,7 +97,7 @@
         .dest-direct   { background: #dcfce7; color: #15803d; }
         .dest-transfer { background: #f3f4f6; color: #4b5563; }
 
-        .card-dest { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+        .card-dest { display: flex; flex-direction: row; align-items: center; gap: 6px; }
         .platform { font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
         .plat-3  { background: #dbeafe; color: #1d4ed8; }
         .plat-12 { background: #e5e7eb; color: #4b5563; }
@@ -506,8 +506,8 @@ function renderAt(offset) {
                 <div class="card-wait">${wait}</div>
             </div>
             <div class="card-dest">
-                <div class="dest ${cls}">${label}</div>
                 ${platHtml}
+                <div class="dest ${cls}">${label}</div>
             </div>
         </div>`;
     }).join('');
