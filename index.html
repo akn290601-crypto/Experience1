@@ -471,7 +471,7 @@ function renderAt(offset) {
         if (direction === 'return') {
             isDirect = t.direct || isDirectTrain(t.hr, t.min);
             if (isDirect) {
-                arrivalHtml = `着 ${arrivalTime(t.hr, t.min, 16)}`;
+                arrivalHtml = `着 ${arrivalTime(t.hr, t.min, 17)}`;
                 connHtml    = '';
             } else {
                 const conn = findReturnConnection(t.hr, t.min);
