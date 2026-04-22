@@ -353,7 +353,7 @@ function findConnection(deptHr, deptMin) {
         if (!trains) continue;
         for (const t of trains) {
             if (hr * 60 + t.m > ref) {
-                const finTotal = hr * 60 + t.m + 15;
+                const finTotal = hr * 60 + t.m + 16;
                 return {
                     connHr:  key,
                     connMin: t.m,
@@ -369,7 +369,7 @@ function findConnection(deptHr, deptMin) {
 function isDirectTrain(hr, min) {
     const type  = getDayType(new Date());
     const table = hakazakiReturnTimetable[type];
-    const base  = (hr < 5 ? hr + 24 : hr) * 60 + min + 15;
+    const base  = (hr < 5 ? hr + 24 : hr) * 60 + min + 16;
     for (let d = -1; d <= 1; d++) {
         const tot = base + d;
         const key = Math.floor(tot / 60) % 24;
@@ -431,7 +431,7 @@ function findReturnConnection(deptHr, deptMin) {
     const type  = getDayType(new Date());
     const table = hakazakiReturnTimetable[type];
     const adjH  = deptHr < 5 ? deptHr + 24 : deptHr;
-    const ref   = adjH * 60 + deptMin + 15; // 中洲川端着（姪浜+15分）
+    const ref   = adjH * 60 + deptMin + 16; // 中洲川端着（姪浜+16分）
     for (let hr = 5; hr <= 24; hr++) {
         const key    = hr === 24 ? 0 : hr;
         const trains = table[key];
@@ -481,7 +481,7 @@ function renderAt(offset) {
         } else {
             isDirect = t.dest !== '';
             if (isDirect) {
-                arrivalHtml = `着 ${arrivalTime(t.hr, t.min, 16)}`;
+                arrivalHtml = `着 ${arrivalTime(t.hr, t.min, 17)}`;
                 connHtml    = '';
             } else {
                 const conn = findConnection(t.hr, t.min);
