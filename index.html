@@ -110,6 +110,60 @@
             padding: 20px 0;
             font-size: 1rem;
         }
+
+        /* 通知設定 */
+        header { position: relative; width: 100%; max-width: 420px; text-align: center; margin-bottom: 10px; }
+        .notif-btn {
+            position: absolute; top: 50%; right: 0;
+            transform: translateY(-50%);
+            background: none; border: none; cursor: pointer;
+            font-size: 1.4rem; padding: 4px 6px; line-height: 1;
+            opacity: 0.6;
+        }
+        .notif-btn.active { opacity: 1; }
+
+        .notif-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.4); z-index: 100;
+        }
+        .notif-overlay.open { display: block; }
+
+        .notif-panel {
+            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%) translateY(100%);
+            width: 100%; max-width: 480px;
+            background: white; border-radius: 20px 20px 0 0;
+            padding: 20px 20px 48px;
+            z-index: 101; transition: transform 0.3s ease;
+        }
+        .notif-overlay.open .notif-panel { transform: translateX(-50%) translateY(0); }
+
+        .notif-panel h2 { font-size: 1rem; font-weight: 700; margin-bottom: 16px; }
+        .notif-handle {
+            width: 40px; height: 4px; background: #d1d5db;
+            border-radius: 2px; margin: 0 auto 16px;
+        }
+        .notif-add-row { display: flex; gap: 8px; margin-bottom: 16px; }
+        .notif-add-row input[type="time"] {
+            flex: 1; padding: 10px 14px;
+            border: 1.5px solid #d1d5db; border-radius: 10px;
+            font-size: 1.1rem; color: #1a2a3a;
+        }
+        .notif-add-row button {
+            background: #1a2a3a; color: white; border: none;
+            border-radius: 10px; padding: 10px 18px;
+            font-size: 0.9rem; font-weight: 600; cursor: pointer;
+        }
+        .notif-list { display: flex; flex-direction: column; gap: 8px; }
+        .notif-item {
+            display: flex; align-items: center; justify-content: space-between;
+            background: #f3f4f6; border-radius: 10px; padding: 12px 16px;
+        }
+        .notif-item-time { font-size: 1.2rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+        .notif-del {
+            background: none; border: none; cursor: pointer;
+            color: #9ca3af; font-size: 1.1rem; padding: 4px;
+        }
+        .notif-status { font-size: 0.78rem; color: #9ca3af; margin-top: 14px; }
     </style>
 </head>
 <body>
@@ -121,6 +175,7 @@
 
 <header>
     <h1 id="h1-title">呉服町 → 姪浜</h1>
+    <button class="notif-btn" id="notif-btn" onclick="openNotifPanel()">🔔</button>
 </header>
 
 <div class="clock" id="clock">--:--</div>
@@ -133,6 +188,19 @@
 </div>
 
 <div class="trains" id="trains"></div>
+
+<div class="notif-overlay" id="notif-overlay" onclick="closeNotifPanel()">
+    <div class="notif-panel" onclick="event.stopPropagation()">
+        <div class="notif-handle"></div>
+        <h2>通知時刻の設定</h2>
+        <div class="notif-add-row">
+            <input type="time" id="notif-time-input">
+            <button onclick="addNotifTime()">追加</button>
+        </div>
+        <div class="notif-list" id="notif-list"></div>
+        <div class="notif-status" id="notif-status"></div>
+    </div>
+</div>
 
 <script>
 // 行き先: "" = 中洲川端 / "西" = 西新 / "姪" = 姪浜
@@ -545,8 +613,110 @@ function showNext()    {
 function showForward() { if (trainShown) renderAt(trainOffset + 1); }
 function showPrev()    { if (trainShown) renderAt(trainOffset - 1); }
 
+// ===== 通知設定 =====
+let notifyTimes = JSON.parse(localStorage.getItem('notifyTimes') || '[]');
+let firedKeys   = JSON.parse(sessionStorage.getItem('firedKeys') || '[]');
+
+function saveNotifyTimes() {
+    localStorage.setItem('notifyTimes', JSON.stringify(notifyTimes));
+    renderNotifList();
+    updateNotifBtn();
+}
+
+function updateNotifBtn() {
+    document.getElementById('notif-btn').classList.toggle('active', notifyTimes.length > 0);
+}
+
+function openNotifPanel() {
+    document.getElementById('notif-overlay').classList.add('open');
+    renderNotifList();
+    updateNotifStatus();
+}
+function closeNotifPanel() {
+    document.getElementById('notif-overlay').classList.remove('open');
+}
+
+function renderNotifList() {
+    const list = document.getElementById('notif-list');
+    if (notifyTimes.length === 0) {
+        list.innerHTML = '<div style="color:#9ca3af;font-size:0.85rem;">設定された通知はありません</div>';
+        return;
+    }
+    list.innerHTML = notifyTimes.map((t, i) => `
+        <div class="notif-item">
+            <span class="notif-item-time">${t}</span>
+            <button class="notif-del" onclick="removeNotifTime(${i})">✕</button>
+        </div>`).join('');
+}
+
+function removeNotifTime(idx) {
+    notifyTimes.splice(idx, 1);
+    saveNotifyTimes();
+}
+
+async function addNotifTime() {
+    const input = document.getElementById('notif-time-input');
+    const val = input.value;
+    if (!val) return;
+    if (notifyTimes.includes(val)) { updateNotifStatus('この時刻はすでに登録されています'); return; }
+
+    if ('Notification' in window && Notification.permission !== 'granted') {
+        const r = await Notification.requestPermission();
+        if (r !== 'granted') { updateNotifStatus(); return; }
+    }
+    notifyTimes.push(val);
+    notifyTimes.sort();
+    saveNotifyTimes();
+    input.value = '';
+    updateNotifStatus();
+}
+
+function updateNotifStatus(msg) {
+    const el = document.getElementById('notif-status');
+    if (!el) return;
+    if (msg) { el.textContent = msg; return; }
+    if (!('Notification' in window)) {
+        el.textContent = '※ このブラウザは通知に対応していません';
+    } else if (Notification.permission === 'denied') {
+        el.textContent = '※ 通知がブロックされています。ブラウザの設定から許可してください';
+    } else if (Notification.permission === 'granted') {
+        el.textContent = '通知は許可されています';
+    } else {
+        el.textContent = '時刻を追加すると通知の許可を求めます';
+    }
+}
+
+function checkNotifications() {
+    if (notifyTimes.length === 0) return;
+    const now  = new Date();
+    const hhmm = pad(now.getHours()) + ':' + pad(now.getMinutes());
+    const day  = now.toDateString();
+    for (const t of notifyTimes) {
+        const key = day + '/' + t;
+        if (t === hhmm && !firedKeys.includes(key)) {
+            firedKeys.push(key);
+            sessionStorage.setItem('firedKeys', JSON.stringify(firedKeys));
+            fireNotification();
+        }
+    }
+}
+
+function fireNotification() {
+    const all  = getAllTrains();
+    const next = all.find(t => t.diff > 0);
+    const body = next
+        ? `次の電車: ${pad(next.hr)}:${pad(next.min)} 発`
+        : '次の電車をご確認ください';
+    if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('電車の時間です', { body, silent: false });
+    } else {
+        alert('電車の時間です\n' + body);
+    }
+}
+
+updateNotifBtn();
 updateClock();
-setInterval(updateClock, 15000);
+setInterval(() => { updateClock(); checkNotifications(); }, 15000);
 </script>
 
 </body>
